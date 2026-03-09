@@ -3,11 +3,13 @@ name: provider-test-patterns
 description: >-
   Terraform provider acceptance test patterns using terraform-plugin-testing
   with the Plugin Framework. Covers test structure, TestCase/TestStep fields,
-  state checks, plan checks, config helpers, import testing, sweepers, and
-  common scenario patterns. Use this skill when writing, reviewing, or
-  debugging acceptance tests for a Terraform provider, including when the user
-  asks about TestCheckFunc, statecheck, plancheck, import state verification,
-  test sweepers, or how to structure provider test files.
+  ConfigStateChecks with custom statecheck.StateCheck implementations,
+  plan checks, CompareValue for cross-step assertions, config helpers,
+  import testing with ImportStateKind, sweepers, and scenario patterns
+  (basic, update, disappears, validation, regression). Use when writing,
+  reviewing, or debugging provider acceptance tests, including questions about
+  statecheck, plancheck, TestCheckFunc, CheckDestroy, ExpectError, import
+  state verification, or how to structure test files.
 ---
 
 # Provider Acceptance Test Patterns
@@ -39,6 +41,7 @@ that.
 
 ```go
 func TestAccExample_basic(t *testing.T) {
+    var widget example.Widget
     rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
     resourceName := "example_widget.test"
 
@@ -50,7 +53,7 @@ func TestAccExample_basic(t *testing.T) {
             {
                 Config: testAccExampleConfig_basic(rName),
                 ConfigStateChecks: []statecheck.StateCheck{
-                    testAccCheckExampleExists(resourceName),
+                    stateCheckExampleExists(resourceName, &widget),
                     statecheck.ExpectKnownValue(resourceName,
                         tfjsonpath.New("name"), knownvalue.StringExact(rName)),
                     statecheck.ExpectKnownValue(resourceName,
@@ -98,7 +101,6 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 |-------|---------|
 | `Config` | Inline HCL string to apply |
 | `ConfigStateChecks` | `[]statecheck.StateCheck` — modern assertions (preferred) |
-| `Check` | Legacy `ComposeAggregateTestCheckFunc(...)` assertions |
 | `ConfigPlanChecks` | `resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{...}}` |
 | `ExpectError` | `*regexp.Regexp` — expect failure matching pattern |
 | `ExpectNonEmptyPlan` | `bool` — expect non-empty plan after apply |
@@ -123,11 +125,13 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 
 ### Modern: ConfigStateChecks (preferred)
 
-Type-safe with aggregated error reporting. See `references/checks.md` for full
+Type-safe with aggregated error reporting. Compose built-in checks with custom
+`statecheck.StateCheck` implementations. See `references/checks.md` for full
 knownvalue types, tfjsonpath navigation, and comparers.
 
 ```go
 ConfigStateChecks: []statecheck.StateCheck{
+    stateCheckExampleExists(resourceName, &widget),
     statecheck.ExpectKnownValue(resourceName,
         tfjsonpath.New("name"), knownvalue.StringExact("my-widget")),
     statecheck.ExpectKnownValue(resourceName,
@@ -139,7 +143,13 @@ ConfigStateChecks: []statecheck.StateCheck{
 },
 ```
 
-### Legacy: TestCheckFunc (still common in existing code)
+Do not mix `Check` (legacy) and `ConfigStateChecks` in the same step.
+
+### Legacy: Check (for CheckDestroy and migration)
+
+`CheckDestroy` on `TestCase` requires `TestCheckFunc`. The `Check` field on
+`TestStep` also accepts `TestCheckFunc` but prefer `ConfigStateChecks` for new
+tests.
 
 ```go
 Check: resource.ComposeAggregateTestCheckFunc(
@@ -191,7 +201,7 @@ Steps: []resource.TestStep{
     {
         Config: testAccExampleConfig_basic(rName),
         ConfigStateChecks: []statecheck.StateCheck{
-            testAccCheckExampleExists(resourceName),
+            stateCheckExampleExists(resourceName, &widget),
             statecheck.ExpectKnownValue(resourceName,
                 tfjsonpath.New("name"), knownvalue.StringExact(rName)),
         },
@@ -199,6 +209,7 @@ Steps: []resource.TestStep{
     {
         Config: testAccExampleConfig_full(rName, "updated"),
         ConfigStateChecks: []statecheck.StateCheck{
+            stateCheckExampleExists(resourceName, &widget),
             statecheck.ExpectKnownValue(resourceName,
                 tfjsonpath.New("description"), knownvalue.StringExact("updated")),
         },
@@ -225,10 +236,10 @@ After a config step, verify import produces identical state. Use
 ```go
 {
     Config: testAccExampleConfig_basic(rName),
-    Check: resource.ComposeAggregateTestCheckFunc(
-        testAccCheckExampleExists(resourceName),
-        testAccCheckExampleDisappears(resourceName),
-    ),
+    ConfigStateChecks: []statecheck.StateCheck{
+        stateCheckExampleExists(resourceName, &widget),
+        stateCheckExampleDisappears(resourceName),
+    },
     ExpectNonEmptyPlan: true,
 },
 ```
@@ -242,41 +253,134 @@ After a config step, verify import produces identical state. Use
 },
 ```
 
-### Regression (link to bug report in test name/comment)
+### Regression (two-commit workflow)
+
+A proper bug fix uses at least two commits: first commit the regression test
+(which fails, confirming the bug), then commit the fix (test passes). This
+lets reviewers independently verify the test reproduces the issue by checking
+out the first commit, then advancing to the fix.
+
+Name and document regression tests to identify the issue they fix. Include a
+link to the original bug report when possible.
 
 ```go
 // TestAccExample_regressionGH1234 verifies fix for https://github.com/org/repo/issues/1234
-func TestAccExample_regressionGH1234(t *testing.T) { ... }
+func TestAccExample_regressionGH1234(t *testing.T) {
+    rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+    resourceName := "example_widget.test"
+
+    resource.ParallelTest(t, resource.TestCase{
+        PreCheck:                 func() { testAccPreCheck(t) },
+        ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+        CheckDestroy:             testAccCheckExampleDestroy,
+        Steps: []resource.TestStep{
+            {
+                // Reproduce the issue: this config triggered the bug
+                Config: testAccExampleConfig_regressionGH1234(rName),
+                ConfigStateChecks: []statecheck.StateCheck{
+                    stateCheckExampleExists(resourceName, nil),
+                    statecheck.ExpectKnownValue(resourceName,
+                        tfjsonpath.New("computed_field"), knownvalue.NotNull()),
+                },
+            },
+        },
+    })
+}
 ```
 
 ---
 
 ## Helper Functions
 
-### Exists Check
+### Custom StateCheck: Exists
 
-Separate API existence verification into a dedicated function for reuse across
-steps — the source recommends this as a design principle:
+Implement `statecheck.StateCheck` for API existence verification. Separate the
+exists check into its own function for reuse across steps — the source
+recommends this as a design principle:
 
 ```go
-func testAccCheckExampleExists(name string) resource.TestCheckFunc {
-    return func(s *terraform.State) error {
-        rs, ok := s.RootModule().Resources[name]
-        if !ok {
-            return fmt.Errorf("not found: %s", name)
-        }
-        conn := testAccProvider.Meta().(*client.Client)
-        _, err := conn.GetWidget(rs.Primary.ID)
-        return err
+type exampleExistsCheck struct {
+    resourceAddress string
+    widget          *example.Widget
+}
+
+func (e exampleExistsCheck) CheckState(ctx context.Context, req statecheck.CheckStateRequest, resp *statecheck.CheckStateResponse) {
+    r, err := stateResourceAtAddress(req.State, e.resourceAddress)
+    if err != nil {
+        resp.Error = err
+        return
     }
+
+    id, ok := r.AttributeValues["id"].(string)
+    if !ok {
+        resp.Error = fmt.Errorf("no id found for %s", e.resourceAddress)
+        return
+    }
+
+    conn := testAccAPIClient()
+    widget, err := conn.GetWidget(id)
+    if err != nil {
+        resp.Error = fmt.Errorf("%s not found via API: %w", e.resourceAddress, err)
+        return
+    }
+
+    if e.widget != nil {
+        *e.widget = *widget
+    }
+}
+
+func stateCheckExampleExists(name string, widget *example.Widget) statecheck.StateCheck {
+    return exampleExistsCheck{resourceAddress: name, widget: widget}
 }
 ```
 
-### Destroy Check
+### Custom StateCheck: Disappears
+
+Delete a resource via API to simulate external deletion:
+
+```go
+type exampleDisappearsCheck struct {
+    resourceAddress string
+}
+
+func (e exampleDisappearsCheck) CheckState(ctx context.Context, req statecheck.CheckStateRequest, resp *statecheck.CheckStateResponse) {
+    r, err := stateResourceAtAddress(req.State, e.resourceAddress)
+    if err != nil {
+        resp.Error = err
+        return
+    }
+
+    id := r.AttributeValues["id"].(string)
+    conn := testAccAPIClient()
+    resp.Error = conn.DeleteWidget(id)
+}
+
+func stateCheckExampleDisappears(name string) statecheck.StateCheck {
+    return exampleDisappearsCheck{resourceAddress: name}
+}
+```
+
+### State Resource Lookup (shared utility)
+
+```go
+func stateResourceAtAddress(state *tfjson.State, address string) (*tfjson.StateResource, error) {
+    if state == nil || state.Values == nil || state.Values.RootModule == nil {
+        return nil, fmt.Errorf("no state available")
+    }
+    for _, r := range state.Values.RootModule.Resources {
+        if r.Address == address {
+            return r, nil
+        }
+    }
+    return nil, fmt.Errorf("not found in state: %s", address)
+}
+```
+
+### Destroy Check (TestCheckFunc — required by CheckDestroy)
 
 ```go
 func testAccCheckExampleDestroy(s *terraform.State) error {
-    conn := testAccProvider.Meta().(*client.Client)
+    conn := testAccAPIClient()
     for _, rs := range s.RootModule().Resources {
         if rs.Type != "example_widget" {
             continue
