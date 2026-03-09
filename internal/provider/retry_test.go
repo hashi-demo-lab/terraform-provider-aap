@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/ansible/terraform-provider-aap/internal/provider/mock_provider"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/mock_provider"
 )
 
 // TestRetryOperation tests the retry functionality with defensive programming.

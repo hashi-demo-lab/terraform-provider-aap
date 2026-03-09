@@ -1,4 +1,4 @@
-module github.com/ansible/terraform-provider-aap
+module github.com/hashi-demo-lab/terraform-provider-aap
 
 go 1.24.0
 

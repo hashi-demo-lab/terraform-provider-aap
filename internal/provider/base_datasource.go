@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/ansible/terraform-provider-aap/internal/provider/customtypes"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"

@@ -6,7 +6,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/ansible/terraform-provider-aap/internal/provider"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/ansible/aap",
+		Address: "registry.terraform.io/hashi-demo-lab/aap",
 		Debug:   debug,
 	}
 

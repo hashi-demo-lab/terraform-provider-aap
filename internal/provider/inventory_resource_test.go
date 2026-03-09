@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ansible/terraform-provider-aap/internal/provider/customtypes"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	tftypes "github.com/hashicorp/terraform-plugin-framework/types"

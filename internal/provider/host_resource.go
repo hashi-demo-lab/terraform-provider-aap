@@ -10,7 +10,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ansible/terraform-provider-aap/internal/provider/customtypes"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

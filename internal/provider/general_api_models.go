@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"github.com/ansible/terraform-provider-aap/internal/provider/customtypes"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	tftypes "github.com/hashicorp/terraform-plugin-framework/types"
 )
 
