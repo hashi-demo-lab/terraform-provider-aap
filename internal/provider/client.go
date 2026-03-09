@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
-// Provider Http Client interface (will be useful for unit tests)
+// Provider Http Client interface (will be useful for unit tests).
 type ProviderHTTPClient interface {
 	doRequest(method string, path string, params map[string]string, data io.Reader) (*http.Response, []byte, error)
 	Create(path string, data io.Reader) ([]byte, diag.Diagnostics)
@@ -122,7 +122,7 @@ func readAPIEndpoint(client ProviderHTTPClient) (aapDiscoveredEndpoints, diag.Di
 	return discoveredEndpoints, diags
 }
 
-// NewClient - create new AAPClient instance
+// NewClient - create new AAPClient instance.
 func NewClient(host string, authenticator AAPClientAuthenticator, insecureSkipVerify bool, timeout int64) (
 	*AAPClient, diag.Diagnostics) {
 	hostURL, _ := url.JoinPath(host, "/")

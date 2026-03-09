@@ -59,6 +59,11 @@ func TestBaseDataSourceSchema(t *testing.T) {
 func TestBaseDataSourceConfigValidators(t *testing.T) {
 	t.Parallel()
 
+	orgDS, ok := NewOrganizationDataSource().(fwdatasource.DataSourceWithConfigValidators)
+	if !ok {
+		t.Fatal("NewOrganizationDataSource() does not implement DataSourceWithConfigValidators")
+	}
+
 	var testTable = []struct {
 		name       string
 		datasource fwdatasource.DataSourceWithConfigValidators
@@ -80,7 +85,7 @@ func TestBaseDataSourceConfigValidators(t *testing.T) {
 		},
 		{
 			name:       "organization datasource",
-			datasource: NewOrganizationDataSource().(fwdatasource.DataSourceWithConfigValidators),
+			datasource: orgDS,
 			expected: []fwdatasource.ConfigValidator{
 				datasourcevalidator.Any(
 					datasourcevalidator.AtLeastOneOf(

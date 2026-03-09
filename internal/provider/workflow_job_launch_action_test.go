@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// Acceptance tests
+// Acceptance tests.
 func TestAccAAPWorkflowJobAction_Basic(t *testing.T) {
 	jobTemplateID := os.Getenv("AAP_TEST_WORKFLOW_JOB_TEMPLATE_ID")
 	randNum, _ := rand.Int(rand.Reader, big.NewInt(50000000))

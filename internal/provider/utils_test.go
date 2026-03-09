@@ -147,7 +147,7 @@ func TestIsValueProvidedOrPromised(t *testing.T) {
 	}
 }
 
-// TODO: Replace ReturnAAPNamedURL with CreateNamedURL during Resource refactor
+// TODO: Replace ReturnAAPNamedURL with CreateNamedURL during Resource refactor.
 func TestReturnAAPNamedURL(t *testing.T) {
 	var testTable = []struct {
 		testName    string

@@ -20,7 +20,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// TestJobLaunchActionSchema tests the Schema function
+// TestJobLaunchActionSchema tests the Schema function.
 func TestJobLaunchActionSchema(t *testing.T) {
 	t.Parallel()
 
@@ -41,7 +41,7 @@ func TestJobLaunchActionSchema(t *testing.T) {
 	}
 }
 
-// TestJobLaunchActionMetadata tests the Metadata function
+// TestJobLaunchActionMetadata tests the Metadata function.
 func TestJobLaunchActionMetadata(t *testing.T) {
 	t.Parallel()
 
@@ -60,7 +60,7 @@ func TestJobLaunchActionMetadata(t *testing.T) {
 	}
 }
 
-// TestJobLaunchActionConfigure tests the Configure function
+// TestJobLaunchActionConfigure tests the Configure function.
 func TestJobLaunchActionConfigure(t *testing.T) {
 	t.Parallel()
 
@@ -122,7 +122,7 @@ func TestJobLaunchActionConfigure(t *testing.T) {
 	}
 }
 
-// jobActionConfigOverrides allows overriding specific config values
+// jobActionConfigOverrides allows overriding specific config values.
 type jobActionConfigOverrides struct {
 	TemplateID               *int64
 	InventoryID              *int64
@@ -132,7 +132,7 @@ type jobActionConfigOverrides struct {
 	IgnoreJobResults         *bool
 }
 
-// valueOrNil returns a tftypes.Value with the given value if non-nil, otherwise a typed nil
+// valueOrNil returns a tftypes.Value with the given value if non-nil, otherwise a typed nil.
 func valueOrNil[T any](tfType tftypes.Type, value *T) tftypes.Value {
 	if value != nil {
 		return tftypes.NewValue(tfType, *value)
@@ -140,7 +140,7 @@ func valueOrNil[T any](tfType tftypes.Type, value *T) tftypes.Value {
 	return tftypes.NewValue(tfType, nil)
 }
 
-// createJobActionConfig creates a config map with defaults and optional overrides
+// createJobActionConfig creates a config map with defaults and optional overrides.
 func createJobActionConfig(overrides jobActionConfigOverrides) map[string]tftypes.Value {
 	return map[string]tftypes.Value{
 		"job_template_id":                     valueOrNil(tftypes.Number, overrides.TemplateID),
@@ -164,7 +164,7 @@ func createJobActionConfig(overrides jobActionConfigOverrides) map[string]tftype
 	}
 }
 
-// mockSuccessfulJobLaunch mocks a successful job launch API call
+// mockSuccessfulJobLaunch mocks a successful job launch API call.
 func mockSuccessfulJobLaunch(mock *MockProviderHTTPClient) {
 	// First, mock the GET request to check if job can be launched
 	mock.EXPECT().getAPIEndpoint().Return("/api/v2")
@@ -207,7 +207,7 @@ func mockSuccessfulJobLaunch(mock *MockProviderHTTPClient) {
 	}`), nil)
 }
 
-// mockFailedJobLaunch mocks a failed job launch API call
+// mockFailedJobLaunch mocks a failed job launch API call.
 func mockFailedJobLaunch(mock *MockProviderHTTPClient, statusCode int, responseBody string, err error) {
 	// First, mock the GET request to check if job can be launched
 	mock.EXPECT().getAPIEndpoint().Return("/api/v2")
@@ -243,7 +243,7 @@ func mockFailedJobLaunch(mock *MockProviderHTTPClient, statusCode int, responseB
 	).Return(&http.Response{StatusCode: statusCode}, []byte(responseBody), err)
 }
 
-// Helper function to create an InvokeRequest with config data
+// Helper function to create an InvokeRequest with config data.
 func createInvokeRequest(t *testing.T, action *JobAction, configValues map[string]tftypes.Value) fwaction.InvokeRequest {
 	t.Helper()
 
@@ -269,7 +269,7 @@ func createInvokeRequest(t *testing.T, action *JobAction, configValues map[strin
 	}
 }
 
-// createMockInvokeResponse creates an InvokeResponse with a mocked SendProgress function
+// createMockInvokeResponse creates an InvokeResponse with a mocked SendProgress function.
 func createMockInvokeResponse(t *testing.T) *fwaction.InvokeResponse {
 	t.Helper()
 
@@ -283,7 +283,7 @@ func createMockInvokeResponse(t *testing.T) *fwaction.InvokeResponse {
 	}
 }
 
-// TestJobLaunchActionInvoke tests the full Invoke function
+// TestJobLaunchActionInvoke tests the full Invoke function.
 func TestJobLaunchActionInvoke(t *testing.T) {
 	t.Parallel()
 

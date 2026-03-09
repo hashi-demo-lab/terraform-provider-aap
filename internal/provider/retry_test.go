@@ -247,7 +247,7 @@ func TestRetryOperation(t *testing.T) {
 	})
 }
 
-// validateBasicRetryConfig validates common config fields
+// validateBasicRetryConfig validates common config fields.
 func validateBasicRetryConfig(ctx context.Context, t *testing.T, config *RetryConfig, operationName string, expectedSuccessCodes []int) {
 	assert.Equal(t, operationName, config.operationName)
 	assert.Equal(t, ctx, config.ctx)
@@ -256,7 +256,7 @@ func validateBasicRetryConfig(ctx context.Context, t *testing.T, config *RetryCo
 	assert.NotNil(t, config.operation)
 }
 
-// validateRetryStateConf validates StateChangeConf fields
+// validateRetryStateConf validates StateChangeConf fields.
 func validateRetryStateConf(t *testing.T, config *RetryConfig, expectedTimeout, expectedDelay,
 	expectedMinTimeout time.Duration) {
 	assert.Equal(t, []string{RetryStateRetrying}, config.stateConf.Pending)

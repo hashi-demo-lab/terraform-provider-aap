@@ -33,7 +33,7 @@ type WorkflowJobActionModel struct {
 	IgnoreJobResults types.Bool `tfsdk:"ignore_job_results"`
 }
 
-// Schema defines the schema for the job action
+// Schema defines the schema for the job action.
 func (a *WorkflowJobAction) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -147,7 +147,7 @@ func (a *WorkflowJobAction) Invoke(ctx context.Context, req action.InvokeRequest
 	}
 }
 
-// Configure configures the job action with the provider client
+// Configure configures the job action with the provider client.
 func (a *WorkflowJobAction) Configure(_ context.Context, req action.ConfigureRequest, resp *action.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -165,7 +165,7 @@ func (a *WorkflowJobAction) Configure(_ context.Context, req action.ConfigureReq
 	a.client = client
 }
 
-// Metadata returns the action metadata
+// Metadata returns the action metadata.
 func (a *WorkflowJobAction) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_workflow_job_launch"
 }

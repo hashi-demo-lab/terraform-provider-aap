@@ -7,7 +7,7 @@ import (
 
 // ---------------------------------------------------------------------------
 
-// RelatedAPIModel represents related API model data
+// RelatedAPIModel represents related API model data.
 type RelatedAPIModel struct {
 	NamedURL string `json:"named_url,omitempty"`
 }

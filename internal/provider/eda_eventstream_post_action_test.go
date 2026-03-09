@@ -38,7 +38,7 @@ func TestEDAEventStreamPostActionSchema(t *testing.T) {
 	}
 }
 
-// Test Metadata
+// Test Metadata.
 func TestEDAEventStreamPostActionMetadata(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()
@@ -55,14 +55,14 @@ func TestEDAEventStreamPostActionMetadata(t *testing.T) {
 	}
 }
 
-// Mock marshaler that always fails
+// Mock marshaler that always fails.
 type failingMarshaler struct{}
 
 func (f failingMarshaler) Marshal(_ any) ([]byte, error) {
 	return nil, errors.New("marshal failed")
 }
 
-// Test CreateEventPayload
+// Test CreateEventPayload.
 func TestCreateEventPayload(t *testing.T) {
 	t.Parallel()
 
@@ -113,7 +113,7 @@ func TestCreateEventPayload(t *testing.T) {
 	}
 }
 
-// Test CreateRequest
+// Test CreateRequest.
 func TestCreateRequest(t *testing.T) {
 	testTable := []struct {
 		name          string
@@ -220,7 +220,7 @@ func TestCreateClient(t *testing.T) {
 			}
 			client := model.CreateClient()
 			expected := tc.expectInsecureSkipVerify
-			actual := client.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify
+			actual := client.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify //nolint:forcetypeassert // test assertion, panic is acceptable
 			if actual != expected {
 				t.Errorf("Expected client transport be created with InsecureSkipVerify %v, actual %v", expected, actual)
 			}
@@ -264,7 +264,7 @@ func (m *mockReadFailClient) Do(_ *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-// Test ExecuteRequest
+// Test ExecuteRequest.
 func TestExecuteRequest(t *testing.T) {
 	t.Parallel()
 	testTable := []struct {

@@ -13,22 +13,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-// RetryOperationFunc defines the signature for operations that can be retried
+// RetryOperationFunc defines the signature for operations that can be retried.
 type RetryOperationFunc func() ([]byte, diag.Diagnostics, int)
 
-// RetryOperation interface for testing with mocks
+// RetryOperation interface for testing with mocks.
 type RetryOperation interface {
 	Execute() ([]byte, diag.Diagnostics, int)
 }
 
-// WrapRetryOperation converts a RetryOperation interface to a RetryOperationFunc
+// WrapRetryOperation converts a RetryOperation interface to a RetryOperationFunc.
 func WrapRetryOperation(op RetryOperation) RetryOperationFunc {
 	return func() ([]byte, diag.Diagnostics, int) {
 		return op.Execute()
 	}
 }
 
-// RetryConfig contains configuration for retrying host operations
+// RetryConfig contains configuration for retrying host operations.
 type RetryConfig struct {
 	stateConf          *retry.StateChangeConf
 	operationName      string
@@ -37,7 +37,7 @@ type RetryConfig struct {
 	ctx                context.Context
 }
 
-// RetryResult contains the result of a retry operation
+// RetryResult contains the result of a retry operation.
 type RetryResult struct {
 	Body  []byte
 	Diags diag.Diagnostics
@@ -45,25 +45,25 @@ type RetryResult struct {
 }
 
 const (
-	// DefaultRetryTimeout is the overall timeout for retry operations (seconds) Default: 30min
+	// DefaultRetryTimeout is the overall timeout for retry operations (seconds) Default: 30min.
 	DefaultRetryTimeout = 1800
 
-	// DefaultRetryDelay is the time to wait between retries (seconds)
+	// DefaultRetryDelay is the time to wait between retries (seconds).
 	DefaultRetryDelay = 5
 
-	// DefaultRetryInitialDelay is the initial delay before first retry (seconds)
+	// DefaultRetryInitialDelay is the initial delay before first retry (seconds).
 	DefaultRetryInitialDelay = 2
 
-	// RetryStateError represents an error state in retry operations
+	// RetryStateError represents an error state in retry operations.
 	RetryStateError = "error"
-	// RetryStateRetrying represents a retrying state in retry operations
+	// RetryStateRetrying represents a retrying state in retry operations.
 	RetryStateRetrying = "retrying"
-	// RetryStateSuccess represents a success state in retry operations
+	// RetryStateSuccess represents a success state in retry operations.
 	RetryStateSuccess = "success"
 )
 
 var (
-	// DefaultRetrySuccessStatusCodes contains success status codes for retry operations
+	// DefaultRetrySuccessStatusCodes contains success status codes for retry operations.
 	DefaultRetrySuccessStatusCodes = []int{http.StatusAccepted, http.StatusNoContent}
 
 	// DefaultRetryableStatusCodes contains retryable status codes for retry operations
@@ -85,7 +85,7 @@ var (
 		http.StatusServiceUnavailable, http.StatusGatewayTimeout, http.StatusForbidden}
 )
 
-// SafeDurationFromSeconds safely converts seconds to time.Duration, checking for overflow
+// SafeDurationFromSeconds safely converts seconds to time.Duration, checking for overflow.
 func SafeDurationFromSeconds(seconds int64) (time.Duration, error) {
 	// Maximum duration in seconds for int64 is roughly 292 years
 	const maxDurationSeconds = math.MaxInt64 / int64(time.Second)
@@ -99,7 +99,7 @@ func SafeDurationFromSeconds(seconds int64) (time.Duration, error) {
 	return time.Duration(seconds) * time.Second, nil
 }
 
-// CreateRetryConfig creates a RetryConfig wrapping Terraform's retry.StateChangeConf object
+// CreateRetryConfig creates a RetryConfig wrapping Terraform's retry.StateChangeConf object.
 func CreateRetryConfig(ctx context.Context, operationName string, operation RetryOperationFunc,
 	successStatusCodes []int, retryableStatusCodes []int, retryTimeout int64, initialDelay int64,
 	retryDelay int64) (*RetryConfig, diag.Diagnostics) {
@@ -181,7 +181,7 @@ func CreateRetryConfig(ctx context.Context, operationName string, operation Retr
 	}, diags
 }
 
-// RetryWithConfig executes a retry operation with the provided configuration
+// RetryWithConfig executes a retry operation with the provided configuration.
 func RetryWithConfig(retryConfig *RetryConfig) (*RetryResult, error) {
 	if retryConfig == nil {
 		return nil, fmt.Errorf("retry configuration cannot be nil")

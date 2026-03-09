@@ -82,7 +82,7 @@ func TestOrganizationDataSourceValidateConfig(t *testing.T) {
 			ctx := t.Context()
 
 			// Create the data source
-			ds := NewOrganizationDataSource().(*OrganizationDataSource)
+			ds := NewOrganizationDataSource().(*OrganizationDataSource) //nolint:forcetypeassert // test assertion, panic is acceptable
 
 			// Get the schema
 			schemaReq := fwdatasource.SchemaRequest{}

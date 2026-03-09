@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
-// JobTemplateAPIModel represents a JobTemplate AAP API model
+// JobTemplateAPIModel represents a JobTemplate AAP API model.
 type JobTemplateAPIModel struct {
 	BaseDetailAPIModelWithOrg
 }

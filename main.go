@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	// Example version string that can be overwritten by a release process
+	// Example version string that can be overwritten by a release process.
 	version = "dev"
 )
 

@@ -36,7 +36,7 @@ const (
 	VerbosityMax int64 = 5
 )
 
-// JobAPIModel represents the AAP API model. /api/controller/v2/jobs/<id>/
+// JobAPIModel represents the AAP API model. /api/controller/v2/jobs/<id>/.
 type JobAPIModel struct {
 	TemplateID           int64                  `json:"job_template,omitempty"`
 	Type                 string                 `json:"job_type,omitempty"`

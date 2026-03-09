@@ -32,7 +32,7 @@ const (
 	statusPendingConst = "pending"
 )
 
-// createMockResponse creates an http.Response with the required Request field for ValidateResponse
+// createMockResponse creates an http.Response with the required Request field for ValidateResponse.
 func createMockResponse(statusCode int, method, urlPath string) *http.Response {
 	return &http.Response{
 		StatusCode: statusCode,
@@ -638,7 +638,7 @@ func testAccDeleteJob(jobURL *string) func(s *terraform.State) error {
 // in the retryUntilAAPJobReachesAnyFinalState function. This validates that:
 // 1. Diagnostics errors from client.Get() are properly handled (not standard Go errors)
 // 2. The function returns retryable errors for transient failures
-// 3. Model state is updated correctly as jobs transition from non-final to final states
+// 3. Model state is updated correctly as jobs transition from non-final to final states.
 func TestRetryUntilAAPJobReachesAnyFinalState_ErrorHandling(t *testing.T) {
 	t.Parallel()
 
@@ -744,7 +744,7 @@ func TestRetryUntilAAPJobReachesAnyFinalState_ErrorHandling(t *testing.T) {
 	})
 }
 
-// assertLogFieldEquals validates a specific field in the parsed log entry
+// assertLogFieldEquals validates a specific field in the parsed log entry.
 func assertLogFieldEquals(t *testing.T, logEntry map[string]interface{}, fieldName string, expectedValue interface{}) {
 	t.Helper()
 
@@ -767,7 +767,7 @@ func assertLogFieldEquals(t *testing.T, logEntry map[string]interface{}, fieldNa
 }
 
 // TestRetryUntilAAPJobReachesAnyFinalState_LoggingBehavior ensures tflog.Debug is used
-// with expected structured fields instead of fmt.Printf
+// with expected structured fields instead of fmt.Printf.
 func TestRetryUntilAAPJobReachesAnyFinalState_LoggingBehavior(t *testing.T) {
 	// Create a buffer to capture tflog output
 	var logBuffer strings.Builder

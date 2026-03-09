@@ -292,7 +292,7 @@ func (r *WorkflowJobResource) Update(ctx context.Context, req resource.UpdateReq
 func (r WorkflowJobResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 }
 
-// CreateRequestBody creates a JSON encoded request body from the workflow job resource data
+// CreateRequestBody creates a JSON encoded request body from the workflow job resource data.
 func (r *WorkflowJobModel) CreateRequestBody() ([]byte, diag.Diagnostics) {
 	var diags diag.Diagnostics
 

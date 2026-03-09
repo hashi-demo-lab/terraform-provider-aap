@@ -280,7 +280,7 @@ func TestWorkflowJobResourceConfigure(t *testing.T) {
 	}
 }
 
-// Acceptance tests
+// Acceptance tests.
 func getWorkflowJobResourceFromStateFile(s *terraform.State) (map[string]interface{}, error) {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != baseResourceNameWorkflowJob {

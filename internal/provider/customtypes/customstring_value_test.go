@@ -3,8 +3,8 @@ package customtypes_test
 import (
 	"testing"
 
-	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashi-demo-lab/terraform-provider-aap/internal/provider/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -72,7 +72,6 @@ func TestAAPCustomStringStringSemanticEquals(t *testing.T) {
 		},
 	}
 	for name, testCase := range testCases {
-		name, testCase := name, testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

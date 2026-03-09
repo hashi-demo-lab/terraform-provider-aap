@@ -298,7 +298,7 @@ func TestAccHostResource(t *testing.T) {
 	})
 }
 
-// testAccHostResourceMinimal returns a configuration for an AAP host with the required options only
+// testAccHostResourceMinimal returns a configuration for an AAP host with the required options only.
 func testAccHostResourceMinimal(inventoryName, hostName string) string {
 	return fmt.Sprintf(`
 resource "aap_inventory" "test" {
@@ -311,7 +311,7 @@ resource "aap_host" "test" {
 }`, inventoryName, hostName)
 }
 
-// testAccHostResourceComplete returns a configuration for an AAP host with the provided name and all options
+// testAccHostResourceComplete returns a configuration for an AAP host with the provided name and all options.
 func testAccHostResourceComplete(inventoryName, groupName, hostName string) string {
 	return fmt.Sprintf(`
 resource "aap_inventory" "test" {

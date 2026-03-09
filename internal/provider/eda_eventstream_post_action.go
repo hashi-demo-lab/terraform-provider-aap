@@ -26,12 +26,12 @@ func NewEDAEventStreamPostAction() action.Action {
 
 type EDAEventStreamPostAction struct{}
 
-// Metadata
+// Metadata.
 func (a *EDAEventStreamPostAction) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_eda_eventstream_post"
 }
 
-// Schema
+// Schema.
 func (a *EDAEventStreamPostAction) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Sends an event payload to an EDA Event Stream URL",
@@ -142,7 +142,7 @@ func (m *EventStreamActionModel) CreateEventPayloadWithMarshaler(marshaler JSONM
 	return jsonPayload, nil
 }
 
-// Create an http POST request to the configured Event Stream URL using basic auth
+// Create an http POST request to the configured Event Stream URL using basic auth.
 func (m *EventStreamActionModel) CreateRequest(ctx context.Context, body io.Reader) (*http.Request, diag.Diagnostics) {
 	url := m.EventStreamConfig.Url.ValueString()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
@@ -163,7 +163,7 @@ func (m *EventStreamActionModel) CreateRequest(ctx context.Context, body io.Read
 	return req, nil
 }
 
-// Create an http.Client
+// Create an http.Client.
 func (m *EventStreamActionModel) CreateClient() *http.Client {
 	insecureSkipVerify := m.EventStreamConfig.InsecureSkipVerify.ValueBool()
 	tr := &http.Transport{
@@ -221,7 +221,7 @@ func (a *EDAEventStreamPostAction) ExecuteRequest(client HttpClient, req *http.R
 	return body, nil
 }
 
-// Invoke the action
+// Invoke the action.
 func (a *EDAEventStreamPostAction) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
 	var config EventStreamActionModel
 

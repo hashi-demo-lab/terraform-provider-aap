@@ -17,7 +17,7 @@ import (
 )
 
 // ReturnAAPNamedURL returns an AAP named URL for the given model and URI.
-// TODO: Replace ReturnAAPNamedURL with CreateNamedURL during Resource refactor
+// TODO: Replace ReturnAAPNamedURL with CreateNamedURL during Resource refactor.
 func ReturnAAPNamedURL(id types.Int64, name types.String, orgName types.String, uri string) (string, error) {
 	if id.ValueInt64() != 0 {
 		return path.Join(uri, id.String()), nil

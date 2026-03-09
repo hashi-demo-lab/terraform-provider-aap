@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
-// InventoryAPIModel represents an Inventory AAP API model
+// InventoryAPIModel represents an Inventory AAP API model.
 type InventoryAPIModel struct {
 	BaseDetailAPIModelWithOrg
 }

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// GroupAPIModel represents a Group AAP API model
+// GroupAPIModel represents a Group AAP API model.
 type GroupAPIModel struct {
 	InventoryID int64  `json:"inventory"`
 	Name        string `json:"name"`
@@ -27,7 +27,7 @@ type GroupAPIModel struct {
 	ID          int64  `json:"id,omitempty"`
 }
 
-// GroupResourceModel maps the group resource schema to a Go struct
+// GroupResourceModel maps the group resource schema to a Go struct.
 type GroupResourceModel struct {
 	InventoryID types.Int64                      `tfsdk:"inventory_id"`
 	Name        types.String                     `tfsdk:"name"`
@@ -58,7 +58,7 @@ func (r *GroupResource) Metadata(_ context.Context, req resource.MetadataRequest
 	resp.TypeName = req.ProviderTypeName + "_group"
 }
 
-// Configure adds the provider configured client to the resource
+// Configure adds the provider configured client to the resource.
 func (r *GroupResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -250,7 +250,7 @@ func (r *GroupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-// CreateRequestBody creates a JSON encoded request body from the group resource data
+// CreateRequestBody creates a JSON encoded request body from the group resource data.
 func (r *GroupResourceModel) CreateRequestBody() ([]byte, diag.Diagnostics) {
 	// Convert group resource data to API data model
 	group := GroupAPIModel{
@@ -274,7 +274,7 @@ func (r *GroupResourceModel) CreateRequestBody() ([]byte, diag.Diagnostics) {
 	return jsonBody, nil
 }
 
-// ParseHTTPResponse updates the group resource data from an AAP API response
+// ParseHTTPResponse updates the group resource data from an AAP API response.
 func (r *GroupResourceModel) ParseHTTPResponse(body []byte) diag.Diagnostics {
 	var diags diag.Diagnostics
 

@@ -36,7 +36,7 @@ type HostAPIModel struct {
 	ID          int64  `json:"id,omitempty"`
 }
 
-// HostResourceModel maps the host resource schema to a Go struct
+// HostResourceModel maps the host resource schema to a Go struct.
 type HostResourceModel struct {
 	InventoryID types.Int64                      `tfsdk:"inventory_id"`
 	Name        types.String                     `tfsdk:"name"`
@@ -69,7 +69,7 @@ func (r *HostResource) Metadata(_ context.Context, req resource.MetadataRequest,
 	resp.TypeName = req.ProviderTypeName + "_host"
 }
 
-// Configure adds the provider configured client to the resource
+// Configure adds the provider configured client to the resource.
 func (r *HostResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -353,7 +353,7 @@ func (r *HostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-// CreateRequestBody creates a JSON encoded request body from the host resource data
+// CreateRequestBody creates a JSON encoded request body from the host resource data.
 func (r *HostResourceModel) CreateRequestBody() ([]byte, diag.Diagnostics) {
 	// Convert host resource data to API data model
 	host := HostAPIModel{
@@ -378,7 +378,7 @@ func (r *HostResourceModel) CreateRequestBody() ([]byte, diag.Diagnostics) {
 	return jsonBody, nil
 }
 
-// ParseHTTPResponse updates the host resource data from an AAP API response
+// ParseHTTPResponse updates the host resource data from an AAP API response.
 func (r *HostResourceModel) ParseHTTPResponse(body []byte) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -406,10 +406,19 @@ func extractIDs(data map[string]interface{}) []int64 {
 	var ids []int64
 
 	if value, ok := data["results"]; ok {
-		for _, v := range value.([]interface{}) {
-			group := v.(map[string]interface{})
+		results, ok := value.([]interface{})
+		if !ok {
+			return ids
+		}
+		for _, v := range results {
+			group, ok := v.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			if id, ok := group["id"]; ok {
-				ids = append(ids, int64(id.(float64)))
+				if floatID, ok := id.(float64); ok {
+					ids = append(ids, int64(floatID))
+				}
 			}
 		}
 	}

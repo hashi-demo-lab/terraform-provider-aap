@@ -35,7 +35,7 @@ type JobActionModel struct {
 	IgnoreJobResults types.Bool `tfsdk:"ignore_job_results"`
 }
 
-// Schema defines the schema for the job action
+// Schema defines the schema for the job action.
 func (a *JobAction) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -218,7 +218,7 @@ func (a *JobAction) Invoke(ctx context.Context, req action.InvokeRequest, respon
 	}
 }
 
-// Configure configures the job action with the provider client
+// Configure configures the job action with the provider client.
 func (a *JobAction) Configure(_ context.Context, req action.ConfigureRequest, resp *action.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -236,7 +236,7 @@ func (a *JobAction) Configure(_ context.Context, req action.ConfigureRequest, re
 	a.client = client
 }
 
-// Metadata returns the action metadata
+// Metadata returns the action metadata.
 func (a *JobAction) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_job_launch"
 }

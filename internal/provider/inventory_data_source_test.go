@@ -148,7 +148,7 @@ func TestAccInventoryDataSource(t *testing.T) {
 	})
 }
 
-// testAccInventoryDataSource configures the Inventory Data Source for testing
+// testAccInventoryDataSource configures the Inventory Data Source for testing.
 func testAccInventoryDataSource(name string) string {
 	return fmt.Sprintf(`
 resource "aap_inventory" "test" {

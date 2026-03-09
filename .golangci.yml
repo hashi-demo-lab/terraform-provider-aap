@@ -50,6 +50,8 @@ linters:
           deny:
             - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2"
               desc: "Use terraform-plugin-framework or terraform-plugin-testing instead"
+            - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+              desc: "Use github.com/hashicorp/terraform-plugin-testing/helper/acctest instead"
             - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
               desc: "Use github.com/hashicorp/terraform-plugin-testing/helper/resource instead"
             - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
