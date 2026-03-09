@@ -5,61 +5,65 @@
 
 ## Overview
 
-This document captures the full setup and execution process for running the terraform-provider-aap acceptance tests (`TestAcc*`) against a real AAP instance. The provider has 39 acceptance tests across 11 test files covering resources, data sources, and actions.
+This document captures the full setup and execution process for running the terraform-provider-aap acceptance tests (`TestAcc*`) against a real AAP instance. The provider has 39 acceptance tests across 14 test files covering resources, data sources, and actions.
+
+A single script (`testing/setup-env.sh`) handles collection install, AAP provisioning, and test execution. Connection details are provided via a `testing/.env` file.
 
 ## Prerequisites
 
 - A running AAP 2.5+ instance (2.4 is partially supported with fallbacks)
 - Admin credentials (username/password) for the AAP instance
 - `ansible-galaxy` and `ansible-playbook` CLI tools installed
-- Go toolchain for running `make testacc`
+- Go toolchain
 
-## Step 1: Set Connection Environment Variables
+## Usage
 
-Export the connection details for both the Ansible playbook and the provider tests:
+Create `testing/.env` with your AAP connection details:
 
 ```bash
-export AAP_HOSTNAME=https://aap.example.com   # Full URL including protocol
-export AAP_USERNAME=admin                       # Admin username
-export AAP_PASSWORD=secretpassword              # Admin password
-export AAP_INSECURE_SKIP_VERIFY=true            # Set if using self-signed certs
+cat > testing/.env <<'EOF'
+AAP_HOSTNAME=https://aap.example.com
+AAP_USERNAME=admin
+AAP_PASSWORD=changeme
+AAP_INSECURE_SKIP_VERIFY=true
+EOF
 ```
 
-The playbook uses these same variables via the `ansible.controller` collection's environment variable support (`CONTROLLER_HOST`, `CONTROLLER_USERNAME`, `CONTROLLER_PASSWORD` are also accepted by the collection, but the provider tests expect the `AAP_*` variants).
+Run everything:
 
-### Authentication Modes
+```bash
+./testing/setup-env.sh
+```
+
+The script will:
+
+1. Load connection details from `testing/.env`
+2. Derive `CONTROLLER_*` and `EDA_CONTROLLER_*` vars for the Ansible collections
+3. Install required Ansible collections (`ansible.controller`, `ansible.platform`, `ansible.eda`)
+4. Run the setup playbook to provision test resources in AAP
+5. Source the generated resource IDs and API token from `testing/acceptance_test_vars.env`
+6. Execute all acceptance tests with `TF_ACC=1`
+
+### Options
+
+```bash
+./testing/setup-env.sh --run TestAccAAPJob_basic   # run a single test
+./testing/setup-env.sh --skip-setup                # skip provisioning, just run tests
+./testing/setup-env.sh --skip-setup --run TestAcc  # combine options
+```
+
+## Authentication
 
 The provider supports two authentication modes (see `internal/provider/provider_test.go:30-58`):
 
 1. **Basic auth** — `AAP_USERNAME` + `AAP_PASSWORD` (used when `AAP_TOKEN` is not set)
 2. **Token auth** — `AAP_TOKEN` takes precedence; username/password are ignored when token is present
 
-The setup playbook generates an API token automatically (Step 3), so after setup you can use either mode.
+The setup playbook generates an API token automatically and writes it to `testing/acceptance_test_vars.env`, so after first run both modes are available.
 
-## Step 2: Install Ansible Collections
+## What the Setup Playbook Creates
 
-```bash
-ansible-galaxy collection install -r testing/requirements.yml
-```
-
-Required collections (from `testing/requirements.yml`):
-
-| Collection | Purpose |
-|---|---|
-| `ansible.controller` | Manage controller resources (job templates, inventories, orgs, projects) |
-| `ansible.platform` | Platform-level operations (token creation on AAP 2.5+) |
-| `ansible.eda` | EDA resources (credentials, event streams) |
-
-**Note:** These collections are hosted on `console.redhat.com/ansible/automation-hub` and may require an Ansible Automation Hub token configured in `ansible.cfg`.
-
-## Step 3: Run the Setup Playbook
-
-```bash
-cd testing
-ansible-playbook playbook.yml
-```
-
-The playbook (`testing/playbook.yml`) creates the following resources in AAP:
+The playbook (`testing/playbook.yml`) provisions these resources in AAP:
 
 | Resource | Name | Purpose |
 |---|---|---|
@@ -82,15 +86,9 @@ The playbook (`testing/playbook.yml`) creates the following resources in AAP:
 | Instance Group | default (looked up) | Instance group for all-fields-on-prompt tests |
 | Token | Platform or Controller token | API token for token-auth testing |
 
-The playbook writes `testing/acceptance_test_vars.env` from the Jinja2 template (`testing/templates/acceptance_test_vars.env.j2`).
+## Generated Environment Variables
 
-## Step 4: Source the Generated Environment Variables
-
-```bash
-source testing/acceptance_test_vars.env
-```
-
-This exports 14 resource IDs plus an API token:
+The playbook writes `testing/acceptance_test_vars.env` (gitignored) with 14 resource IDs plus an API token:
 
 | Variable | Purpose |
 |---|---|
@@ -109,29 +107,9 @@ This exports 14 resource IDs plus an API token:
 | `AAP_TEST_DEFAULT_INSTANCE_GROUP_ID` | Default instance group |
 | `AAP_TOKEN` | Generated API token (platform token on 2.5+, controller token on 2.4) |
 
-## Step 5: Run the Acceptance Tests
-
-```bash
-make testacc
-```
-
-This executes `TF_ACC=1 go test -count=1 -v ./...` which runs all tests including acceptance tests.
-
-To run with coverage:
-```bash
-make testacccov
-```
-
-This writes a coverage profile to `./acceptance-testing.cov`.
-
-To run a specific test:
-```bash
-TF_ACC=1 go test -count=1 -v -run TestAccAAPJob_basic ./internal/provider/
-```
-
 ## Test Inventory
 
-39 acceptance tests across 11 files:
+39 acceptance tests across 14 files:
 
 | File | Tests | Count |
 |---|---|---|
@@ -154,10 +132,12 @@ TF_ACC=1 go test -count=1 -v -run TestAccAAPJob_basic ./internal/provider/
 
 | File | Purpose |
 |---|---|
+| `testing/setup-env.sh` | Single script — loads `.env`, provisions AAP, runs tests |
+| `testing/.env` | AAP connection details (gitignored, user-created) |
 | `testing/playbook.yml` | Ansible playbook that provisions AAP test resources |
 | `testing/requirements.yml` | Ansible collection dependencies |
 | `testing/templates/acceptance_test_vars.env.j2` | Jinja2 template for generated env file |
-| `testing/acceptance_test_vars.env` | Generated file (gitignored) with resource IDs |
+| `testing/acceptance_test_vars.env` | Generated file with resource IDs (gitignored) |
 | `internal/provider/provider_test.go` | `testAccPreCheck()` and provider test factories |
 | `Makefile` | `testacc` and `testacccov` targets |
 
@@ -172,9 +152,7 @@ The playbook tries `ansible.platform.token` first (2.5+), falling back to `ansib
 ### `testAccPreCheck` defaults
 If `AAP_HOSTNAME` is not set, the pre-check defaults to `https://localhost:8043`. If `AAP_INSECURE_SKIP_VERIFY` is not set, it defaults to `true`. Username and password have no defaults and will cause test failure if missing (unless `AAP_TOKEN` is set).
 
-### Running a single test file
+### Running a single test
 ```bash
-TF_ACC=1 go test -count=1 -v -run "TestAcc" ./internal/provider/ -timeout 30m
+./testing/setup-env.sh --skip-setup --run TestAccAAPJob_basic
 ```
-
-The `-timeout 30m` flag is useful since some tests (like `WaitForCompletion` and `DeleteWithRetry`) involve long-running jobs.
