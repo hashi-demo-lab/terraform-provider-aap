@@ -1,5 +1,7 @@
 # 001 - Break Upstream Fork Dependency
 
+This is for isolated testing only, we will work with a fork once process refined...
+
 **Date**: 2026-03-09
 
 ## Summary
