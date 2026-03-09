@@ -2,23 +2,31 @@ version: "2"
 linters:
   default: none
   enable:
+    - copyloopvar
+    - depguard
     - dogsled
+    - durationcheck
     - errcheck
+    - forcetypeassert
     - gocheckcompilerdirectives
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
+    - godot
     - goprintffuncname
     - gosec
     - govet
     - ineffassign
     - lll
+    - makezero
     - misspell
     - mnd
     - nakedret
+    - nilerr
     - noctx
     - nolintlint
+    - predeclared
     - revive
     - staticcheck
     - unconvert
@@ -27,6 +35,27 @@ linters:
     - whitespace
     - usetesting
   settings:
+    depguard:
+      rules:
+        prevent_unmaintained_packages:
+          list-mode: lax
+          deny:
+            - pkg: "io/ioutil"
+              desc: "io/ioutil package has been deprecated since Go 1.16, use io and os packages instead"
+        prevent_sdk_v2:
+          list-mode: lax
+          files:
+            - "!**/internal/**"
+            - "!**/*_test.go"
+          deny:
+            - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2"
+              desc: "Use terraform-plugin-framework or terraform-plugin-testing instead"
+            - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+              desc: "Use github.com/hashicorp/terraform-plugin-testing/helper/resource instead"
+            - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+              desc: "Use terraform-plugin-framework instead"
+            - pkg: "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+              desc: "Use github.com/hashicorp/terraform-plugin-testing/terraform instead"
     goconst:
       min-len: 2
       min-occurrences: 3
@@ -81,6 +110,9 @@ linters:
       - third_party$
       - builtin$
       - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
 formatters:
   enable:
     - gofmt
