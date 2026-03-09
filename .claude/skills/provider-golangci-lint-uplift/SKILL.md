@@ -1,5 +1,5 @@
 ---
-name: golangci-lint-uplift
+name: provider-golangci-lint-uplift
 description: Uplift golangci-lint config to HashiCorp terraform-provider-scaffolding-framework standard. Additive only — adds missing linters/settings/sections, never removes existing config.
 user-invocable: true
 argument-hint: "[path-to-golangci-yml] - Defaults to .golangci.yml in the repo root"
@@ -195,8 +195,3 @@ Use the next available number prefix (`NNN`).
 - [ ] `golangci-lint run ./...` parses config without errors
 - [ ] Local extras preserved (no linters/settings/formatters/exclusions removed)
 - [ ] Spec history file created
-
-## Related Skills
-
-- `provider-resources` — Provider resource implementation (benefits from stricter linting)
-- `provider-test-patterns` — Test patterns (benefits from `copyloopvar`, `forcetypeassert`)
