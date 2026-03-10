@@ -44,3 +44,8 @@ config.tfrc
 # Ignore coverage output
 *.cov
 *.out
+
+# Acceptance test generated files
+testing/.env
+testing/ansible.cfg
+testing/acceptance_test_vars.env
