@@ -1,0 +1,40 @@
+{
+  "skill_name": "github-issue-analysis",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Analyze issues for hashi-demo-lab/terraform-provider-aap",
+      "expected_output": "Markdown report with themes discovered from 15 issues, prioritization scores, demand trends, and recommended actions",
+      "files": [],
+      "assertions": [
+        {"id": "report-file-created", "text": "A markdown report file was created"},
+        {"id": "executive-summary", "text": "Report contains Executive Summary with total issues, theme count, top themes"},
+        {"id": "themes-discovered", "text": "Report identifies 3-8 distinct themes"},
+        {"id": "all-issues-assigned", "text": "All 15 issues appear in at least one theme"},
+        {"id": "priority-scores", "text": "Each theme has a numerical priority score, ranked"},
+        {"id": "score-breakdown", "text": "At least one theme shows per-dimension score breakdown"},
+        {"id": "recommended-actions", "text": "Each theme has a recommended action"},
+        {"id": "issue-links", "text": "Issues linked with GitHub URLs"},
+        {"id": "demand-trends", "text": "Report includes demand trends or age analysis"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "What are users asking for most in hashicorp/terraform-provider-aws?",
+      "expected_output": "Markdown report with themes from 500 issues, adaptive scoring with differentiated scores, demand trends",
+      "files": [],
+      "assertions": [
+        {"id": "report-file-created", "text": "A markdown report file was created"},
+        {"id": "executive-summary", "text": "Report contains Executive Summary with total issues, theme count, top themes"},
+        {"id": "themes-discovered", "text": "Report identifies 5-15 distinct themes"},
+        {"id": "score-differentiation", "text": "Priority scores span at least 2.0 range across themes"},
+        {"id": "priority-scores", "text": "Each theme has a numerical priority score, ranked"},
+        {"id": "score-breakdown", "text": "At least one theme shows per-dimension breakdown"},
+        {"id": "recommended-actions", "text": "Each theme has a recommended action"},
+        {"id": "reaction-data", "text": "Report includes reaction counts or most-reacted issues"},
+        {"id": "demand-trends", "text": "Report includes demand trends or age analysis"},
+        {"id": "issue-links", "text": "Key issues linked with GitHub URLs"}
+      ]
+    }
+  ]
+}
