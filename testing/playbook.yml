@@ -180,6 +180,7 @@
         ansible.platform.token:
           description: "Testing terraform-provider-aap"
           scope: write
+          validate_certs: false
         register: platform_token
       - name: Store platform token
         ansible.builtin.set_fact:
