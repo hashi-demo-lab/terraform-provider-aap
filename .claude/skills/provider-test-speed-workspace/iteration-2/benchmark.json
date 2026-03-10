@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "skill_name": "provider-test-speed",
+    "skill_path": "/Users/simon.lynch/git/terraform-provider-aap/.claude/skills/provider-test-speed",
+    "executor_model": "claude-opus-4-6",
+    "analyzer_model": "claude-opus-4-6",
+    "timestamp": "2026-03-10T16:30:00Z",
+    "evals_run": ["parallel-script-generation"],
+    "runs_per_configuration": 1
+  },
+  "configurations": [
+    {
+      "name": "with_skill",
+      "pass_rate": {"mean": 1.0, "stddev": 0.0},
+      "time_seconds": {"mean": 0, "stddev": 0},
+      "tokens": {"mean": 0, "stddev": 0}
+    },
+    {
+      "name": "without_skill",
+      "pass_rate": {"mean": 0.5, "stddev": 0.0},
+      "time_seconds": {"mean": 0, "stddev": 0},
+      "tokens": {"mean": 0, "stddev": 0}
+    }
+  ],
+  "runs": [
+    {
+      "eval_name": "parallel-script-generation",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 8,
+      "total": 8,
+      "time_seconds": 0,
+      "tokens": 0,
+      "assertions": [
+        {"text": "produces_script", "passed": true},
+        {"text": "pre_compiles_binary", "passed": true},
+        {"text": "group_count_4_or_5", "passed": true},
+        {"text": "separates_job_tests", "passed": true},
+        {"text": "has_exponential_backoff", "passed": true},
+        {"text": "covers_all_tests", "passed": true},
+        {"text": "uses_test_binary_flags", "passed": true},
+        {"text": "reports_comparison", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "parallel-script-generation",
+      "configuration": "without_skill",
+      "pass_rate": 0.5,
+      "passed": 4,
+      "total": 8,
+      "time_seconds": 0,
+      "tokens": 0,
+      "assertions": [
+        {"text": "produces_script", "passed": true},
+        {"text": "pre_compiles_binary", "passed": false},
+        {"text": "group_count_4_or_5", "passed": true},
+        {"text": "separates_job_tests", "passed": false},
+        {"text": "has_exponential_backoff", "passed": false},
+        {"text": "covers_all_tests", "passed": true},
+        {"text": "uses_test_binary_flags", "passed": false},
+        {"text": "reports_comparison", "passed": true}
+      ]
+    }
+  ],
+  "run_summary": {
+    "delta": {
+      "pass_rate": "+0.50",
+      "time_seconds": "N/A",
+      "tokens": "N/A"
+    }
+  },
+  "notes": [
+    "With-skill achieved 100% pass rate (8/8) vs 50% (4/8) for baseline",
+    "Key skill advantages: pre-compiled binary, exponential backoff retry, correct -test.* flags, job/CRUD separation",
+    "Baseline produced functional script but used go test directly (slower compilation), no retry logic, and mixed job-launching tests with CRUD tests (risks contention)",
+    "Both approaches correctly identified all 39 tests and produced comparison tables",
+    "Real-world validation: 5-group strategy achieved 524s wall time vs 824s sequential (1.57x speedup) with 39/39 pass rate"
+  ]
+}
