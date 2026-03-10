@@ -19,6 +19,7 @@ AAP_HOSTNAME=https://aap.example.com
 AAP_USERNAME=admin
 AAP_PASSWORD=changeme
 AAP_INSECURE_SKIP_VERIFY=true
+AAP_AUTOMATION_HUB_TOKEN=<your-token-here>
 EOF
 ```
 
@@ -48,23 +49,17 @@ The script will:
 
 ## Automation Hub Setup
 
-The required collections (`ansible.controller`, `ansible.platform`, `ansible.eda`) are hosted on Red Hat Automation Hub, not public Galaxy. The script auto-detects `testing/ansible.cfg` if present.
+The required collections (`ansible.controller`, `ansible.platform`, `ansible.eda`) are hosted on Red Hat Automation Hub, not public Galaxy.
 
-Create `testing/ansible.cfg`:
+Add your Automation Hub token to `testing/.env`:
 
-```ini
-[galaxy]
-server_list = automation_hub
-
-[galaxy_server.automation_hub]
-url=https://console.redhat.com/api/automation-hub/content/published/
-auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
-token=<YOUR_AUTOMATION_HUB_TOKEN>
+```bash
+AAP_AUTOMATION_HUB_TOKEN=<your-token-here>
 ```
 
 Get your token at: https://console.redhat.com/ansible/automation-hub/token
 
-If collections are already installed, the script skips the install step entirely.
+The script will automatically generate `testing/ansible.cfg` from this token on first run. If collections are already installed, the install step is skipped entirely. You can also provide your own `testing/ansible.cfg` — the script will use it as-is if present.
 
 ## Authentication
 
@@ -156,7 +151,7 @@ The playbook writes `testing/acceptance_test_vars.env` (gitignored) with resourc
 
 ## Troubleshooting
 
-**Collection install fails** — The collections are on Red Hat Automation Hub, not public Galaxy. See [Automation Hub Setup](#automation-hub-setup). If collections are already installed the script skips this step automatically.
+**Collection install fails** — Ensure `AAP_AUTOMATION_HUB_TOKEN` is set in `testing/.env`. The collections are on Red Hat Automation Hub, not public Galaxy. See [Automation Hub Setup](#automation-hub-setup). If collections are already installed the script skips this step automatically.
 
 **EDA tasks fail** — Expected on AAP 2.4. The playbook handles this gracefully with `block/rescue`, but the 4 EDA acceptance tests will fail without an event stream. These tests are 2.5+ only.
 

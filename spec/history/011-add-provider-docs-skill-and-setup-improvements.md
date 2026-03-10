@@ -25,15 +25,15 @@ The skill covers: schema descriptions, template files in `docs/`, `tfplugindocs`
 
 Updated `testing/setup-env.sh` to handle the Automation Hub dependency:
 
-- **Collection pre-check** — Added `collections_installed()` helper that checks each collection from `requirements.yml` via `ansible-galaxy collection list`. Skips install entirely if all collections are already present.
-- **Auto-detect `testing/ansible.cfg`** — If `testing/ansible.cfg` exists, exports `ANSIBLE_CONFIG` so both `ansible-galaxy` and `ansible-playbook` use it for Automation Hub authentication.
-- **Actionable error on install failure** — If `ansible-galaxy collection install` fails, prints a clear message explaining the collections are hosted on Red Hat Automation Hub (not public Galaxy) with an example `ansible.cfg` and token URL.
+- **Auto-generate `testing/ansible.cfg`** — If `testing/ansible.cfg` doesn't exist, the script generates it from `AAP_AUTOMATION_HUB_TOKEN` in `testing/.env`. If neither exists, prints an actionable error with instructions and the token URL.
+- **Collection pre-check** — Added `collections_installed()` helper that greps `ansible-galaxy collection list` output for each collection name (`ansible-galaxy collection list` always exits 0 regardless of whether a collection is found). Skips install entirely if all collections are already present.
+- **Actionable error on install failure** — If `ansible-galaxy collection install` fails, prints a clear message to verify the Automation Hub token.
 
 ### 3. Testing README Update
 
 Updated `testing/README.md` with all details from the 010 history spec:
 
-- **Automation Hub Setup** section with `ansible.cfg` example and token URL
+- **Automation Hub Setup** section with `AAP_AUTOMATION_HUB_TOKEN` in `.env` and auto-generated `ansible.cfg`
 - **Authentication** section documenting basic auth vs token auth modes
 - **Expanded resource table** — all 18 provisioned resources (added Default org, Demo Credential, Instance Group)
 - **Generated Environment Variables** — full table of 14 env vars

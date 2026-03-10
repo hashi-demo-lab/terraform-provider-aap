@@ -58,17 +58,45 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# ── Use testing/ansible.cfg if present ─────────────────────────────────────
-if [[ -f "${REPO_ROOT}/testing/ansible.cfg" ]]; then
-    export ANSIBLE_CONFIG="${REPO_ROOT}/testing/ansible.cfg"
+# ── Ensure testing/ansible.cfg exists ──────────────────────────────────────
+ANSIBLE_CFG="${REPO_ROOT}/testing/ansible.cfg"
+if [[ ! -f "${ANSIBLE_CFG}" ]]; then
+    if [[ -z "${AAP_AUTOMATION_HUB_TOKEN:-}" ]]; then
+        cat >&2 <<'MSG'
+Error: testing/ansible.cfg not found and AAP_AUTOMATION_HUB_TOKEN is not set.
+
+The required collections (ansible.controller, ansible.platform, ansible.eda)
+are hosted on Red Hat Automation Hub, not public Galaxy.
+
+Add your Automation Hub token to testing/.env:
+
+    AAP_AUTOMATION_HUB_TOKEN=<your-token-here>
+
+Get your token at: https://console.redhat.com/ansible/automation-hub/token
+
+The script will generate testing/ansible.cfg automatically.
+MSG
+        exit 1
+    fi
+    echo "==> Generating testing/ansible.cfg from AAP_AUTOMATION_HUB_TOKEN..."
+    cat > "${ANSIBLE_CFG}" <<EOF
+[galaxy]
+server_list = automation_hub
+
+[galaxy_server.automation_hub]
+url=https://console.redhat.com/api/automation-hub/content/published/
+auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+token=${AAP_AUTOMATION_HUB_TOKEN}
+EOF
 fi
+export ANSIBLE_CONFIG="${ANSIBLE_CFG}"
 
 # ── Collection check helper ────────────────────────────────────────────────
 collections_installed() {
     local missing=false
     while IFS= read -r name; do
         [[ -z "${name}" ]] && continue
-        if ! ansible-galaxy collection list "${name}" &>/dev/null; then
+        if ! ansible-galaxy collection list "${name}" 2>/dev/null | grep -q "${name}"; then
             missing=true
             echo "  missing: ${name}" >&2
         fi
@@ -91,19 +119,9 @@ Error: Collection install failed.
 The required collections (ansible.controller, ansible.platform, ansible.eda)
 are hosted on Red Hat Automation Hub, not public Galaxy.
 
-Configure Automation Hub access in one of:
-  - testing/ansible.cfg
-  - ~/.ansible.cfg
+Verify your Automation Hub token is correct in testing/.env:
 
-Example:
-
-    [galaxy]
-    server_list = automation_hub
-
-    [galaxy_server.automation_hub]
-    url=https://console.redhat.com/api/automation-hub/content/published/
-    auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
-    token=<YOUR_AUTOMATION_HUB_TOKEN>
+    AAP_AUTOMATION_HUB_TOKEN=<your-token-here>
 
 Get your token at: https://console.redhat.com/ansible/automation-hub/token
 
