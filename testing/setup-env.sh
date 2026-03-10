@@ -58,10 +58,59 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# ── Use testing/ansible.cfg if present ─────────────────────────────────────
+if [[ -f "${REPO_ROOT}/testing/ansible.cfg" ]]; then
+    export ANSIBLE_CONFIG="${REPO_ROOT}/testing/ansible.cfg"
+fi
+
+# ── Collection check helper ────────────────────────────────────────────────
+collections_installed() {
+    local missing=false
+    while IFS= read -r name; do
+        [[ -z "${name}" ]] && continue
+        if ! ansible-galaxy collection list "${name}" &>/dev/null; then
+            missing=true
+            echo "  missing: ${name}" >&2
+        fi
+    done < <(grep '^\s*- name:' "${REPO_ROOT}/testing/requirements.yml" | awk '{print $NF}')
+    [[ "${missing}" == "false" ]]
+}
+
 # ── Setup ────────────────────────────────────────────────────────────────────
 if [[ "${SKIP_SETUP}" == "false" ]]; then
-    echo "==> Installing Ansible collections..."
-    ansible-galaxy collection install -r "${REPO_ROOT}/testing/requirements.yml"
+    echo "==> Checking Ansible collections..."
+    if collections_installed; then
+        echo "    All required collections already installed — skipping install."
+    else
+        echo "==> Installing Ansible collections..."
+        if ! ansible-galaxy collection install -r "${REPO_ROOT}/testing/requirements.yml" 2>&1; then
+            cat >&2 <<'MSG'
+
+Error: Collection install failed.
+
+The required collections (ansible.controller, ansible.platform, ansible.eda)
+are hosted on Red Hat Automation Hub, not public Galaxy.
+
+Configure Automation Hub access in one of:
+  - testing/ansible.cfg
+  - ~/.ansible.cfg
+
+Example:
+
+    [galaxy]
+    server_list = automation_hub
+
+    [galaxy_server.automation_hub]
+    url=https://console.redhat.com/api/automation-hub/content/published/
+    auth_url=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+    token=<YOUR_AUTOMATION_HUB_TOKEN>
+
+Get your token at: https://console.redhat.com/ansible/automation-hub/token
+
+MSG
+            exit 1
+        fi
+    fi
 
     echo "==> Provisioning AAP test resources..."
     ansible-playbook "${REPO_ROOT}/testing/playbook.yml"
