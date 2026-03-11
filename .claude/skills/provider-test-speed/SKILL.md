@@ -8,6 +8,28 @@ description: Analyze and optimize Terraform provider acceptance test execution f
 Produce a parallel execution script that runs Terraform provider acceptance
 tests at maximum speed while maintaining a 100% pass rate.
 
+## Core Principle: Resource-Type Grouping
+
+The grouping strategy is resource-type-aware, not pure time-balancing.
+A naive approach (LPT/bin-packing by duration) mixes all test types across
+groups for perfect time balance — but in practice this causes backend
+saturation because every group hammers the same async job queue
+simultaneously. Resource-type grouping keeps related tests together so
+each group hits a different API surface, avoiding contention:
+
+- Tests that **trigger long-running backend operations** (job launches,
+  workflow runs, provisioning) go in dedicated groups, separated from
+  CRUD-only and data-source tests.
+- Tests for the **same resource type run sequentially** within a group
+  (shared mutable state).
+- Tests for **different resource types run in parallel** across groups
+  (independent API endpoints).
+- **Data source tests** (read-only) are safe to parallel with everything
+  and can be combined with fast CRUD tests.
+
+After grouping by resource type, balance group sizes so no single group
+dominates wall time. Merge small independent resource groups together.
+
 ## Workflow
 
 ### 1. Discover Tests
@@ -15,108 +37,87 @@ tests at maximum speed while maintaining a 100% pass rate.
 Find all acceptance tests (functions prefixed `TestAcc`):
 
 ```bash
-grep -rn 'func TestAcc.*\(t \*testing.T\)' ./internal/provider/ --include='*_test.go'
+# Find the test package
+find . -name '*_test.go' -path '*/internal/*' | head -5
+
+# List all acceptance tests
+grep -rn 'func TestAcc.*\(t \*testing.T\)' <test-package>/ --include='*_test.go'
 ```
 
-Build a test inventory: test name, file, resource type (from file name).
+Build a test inventory: test name, file, resource type (inferred from file
+name or test prefix).
 
 ### 2. Analyze Timing (if output available)
 
 Parse `--- PASS` / `--- FAIL` lines from prior test output to extract
-per-test durations. Calculate:
-
-- **Total wall time** — from `ok ... Ns` line
-- **Sum of test durations**
-- **Parallelism ratio** — sum / wall_time (1.0 = sequential, higher = parallel)
+per-test durations. Calculate total wall time, sum of durations, and
+parallelism ratio (sum / wall_time; 1.0 = sequential).
 
 ### 3. Classify Into Parallel Groups
 
-Group tests by the resource type they manage. The grouping rule:
+**Target 4-5 consolidated groups.** This range is the sweet spot:
+- **3 or fewer** can be SLOWER than sequential — the critical-path group
+  contains most tests and all others finish early and idle.
+- **6+** overwhelms most test environments with concurrent API clients,
+  causing `Client.Timeout exceeded while awaiting headers`.
 
-- Tests in the **same resource group run sequentially** (shared mutable state)
-- Tests in **different groups run in parallel** (independent API endpoints)
-
-Determine groups from file names and test prefixes. Read test configs to
-verify shared resource dependencies. Data source tests (read-only) are safe
-to parallel with everything.
-
-**Target 4-5 consolidated groups, not one group per resource type.** More
-groups means more concurrent API clients hitting the target infrastructure.
-Too many parallel processes (8+) will overwhelm most test environments with
-connection timeouts (`Client.Timeout exceeded while awaiting headers`).
-Too few groups (e.g., 3) can be SLOWER than sequential if the critical-path
-group becomes a bottleneck — all other groups finish early and wait for the
-largest one. The sweet spot is 4-5 groups.
-
-Consolidation strategy — merge related resource types into larger groups:
-- Combine resource tests + their action tests (e.g., job resource + job action)
+Consolidation strategy:
+- Combine resource tests + their associated action/operation tests
 - Combine all read-only data source tests into one group
-- Combine small independent resource groups (inventory, host, group) together
-- Split job tests from job action tests — they don't share mutable state and use different code paths
-- Move workflow launch action tests out of the workflow_job group into a CRUD group for better load balancing
+- Combine small independent resource groups to balance load
+- Balance group sizes so no single group dominates wall time
 
 ### 4. Generate the Parallel Execution Script
 
-Produce a self-contained bash script that:
+Produce a self-contained bash script with these requirements:
 
-1. **Pre-compiles the test binary once** using `go test -c -o <binary>`.
-   Each parallel group then runs the compiled binary directly instead of
-   invoking `go test`. This avoids N parallel compilations which waste
-   time and can cause I/O contention.
-2. Runs each resource group as a separate process in parallel
-3. Uses `-test.run` patterns to select tests per group
-4. Logs each group to a separate file
-5. Waits for all groups, collects exit codes
-6. Parses per-test durations from logs and reports a summary table
-7. Exits non-zero if any group failed
-
-The script must:
-- Pre-compile with `go test -c` and run the binary with `-test.*` flags
-- Set `TF_ACC=1` on every test process
-- Use `-test.timeout 30m` per group
-- Use `-test.count=1` to prevent cached results
-- Accept the same env vars as the provider's existing test setup
-- Print a comparison table at the end showing per-group timing and pass/fail
-- Be immediately runnable without modification
-- Stagger group launches by 2-3 seconds to avoid initial connection storms
-
-**Exponential Backoff for Transient Failures**
-
-When running multiple groups in parallel, connection timeouts and task worker
-contention can cause transient failures. The script should include a retry
-wrapper that:
-- Retries a failed group up to 2 additional times (3 total attempts)
-- Uses exponential backoff delays: 15s, 45s
-- Only retries on timeout-related failures (Client.Timeout, connection refused, EOF)
-- Does NOT retry actual test failures (assertion failures, panic, etc.)
-- Logs retry attempts to the group's log file
-
-This allows using more parallel groups (4-5) for better throughput while
-gracefully recovering from transient AAP server overload.
-
-**Timing Parser Note**
-
-`grep` interprets patterns starting with `---` as flags. Always use
-`grep -oE -e 'pattern'` (with explicit `-e`) when the pattern starts with
-dashes, e.g., `grep -oE -e '--- PASS.*'`.
-
-Save the script to `testing/run-parallel.sh` and make it executable.
-
-Example group launch using the pre-compiled binary:
+**Pre-compiled test binary (critical):**
+Compile the test binary ONCE with `go test -c -o <binary>`, then run that
+binary directly for each group. Each group invokes the binary with
+`-test.*` flags (NOT `go test` with standard flags). This avoids N
+parallel compilations and I/O contention:
 
 ```bash
-# Pre-compile once
+# Step 1: Compile once
 TEST_BINARY="${LOG_DIR}/provider.test"
 go test -c -o "$TEST_BINARY" ./internal/provider/
 
-# Launch each group using the binary
+# Step 2: Run the BINARY (not go test) for each group
 TF_ACC=1 "$TEST_BINARY" \
   -test.count=1 \
   -test.timeout 30m \
-  -test.run "^TestAccAAPJob|^TestAccAAPJobAction_" \
+  -test.run "^TestAccResource_|^TestAccResourceAction_" \
   -test.v \
-  > "$LOG_DIR/jobs.log" 2>&1 &
+  > "$LOG_DIR/group_1.log" 2>&1 &
 ```
+
+The binary uses `-test.run`, `-test.count`, `-test.timeout`, `-test.v`
+(with `test.` prefix). Standard `go test` flags like `-run`, `-count`,
+`-timeout` do NOT work on the compiled binary.
+
+**Exponential backoff retry for transient failures:**
+Under parallel load, connection timeouts and server contention cause
+transient failures. Include a retry wrapper that:
+- Retries a failed group up to 2 additional times (3 total attempts)
+- Uses exponential backoff delays: 15s, 45s
+- Only retries on timeout-related failures (Client.Timeout, connection
+  refused, EOF) — NOT assertion failures or panics
+- Logs retry attempts to the group's log file
+
+**Additional script requirements:**
+- Set `TF_ACC=1` on every test process
+- Stagger group launches by 2-3 seconds to avoid initial connection storms
+- Log each group to a separate file
+- Wait for all groups, collect exit codes
+- Parse per-test durations from logs and report a summary table
+- Exit non-zero if any group failed
+- Accept the same env vars as the provider's existing test setup
+
+**Timing parser note:** `grep` interprets patterns starting with `---` as
+flags. Always use `grep -oE -e 'pattern'` (with explicit `-e`) when the
+pattern starts with dashes.
+
+Save the script to `testing/run-parallel.sh` and make it executable.
 
 ### 5. Run and Validate
 
@@ -126,8 +127,8 @@ Execute the parallel script and verify:
 - **Timing improvement** — compare wall time against sequential baseline
 
 If any group fails, check for connection timeouts first. Timeouts usually
-mean too many parallel groups, not test conflicts. Reduce group count by
-merging the smallest groups together and retry.
+mean too many parallel groups. Reduce group count by merging the smallest
+groups together and retry.
 
 If failures persist after reducing groups, re-run the failing group alone
 to confirm whether the failure is a parallelism conflict or a pre-existing
@@ -140,31 +141,16 @@ Report results as:
 
 | Metric              | Sequential | Parallel | Speedup |
 |---------------------|------------|----------|---------|
-| Wall time           | 824s       | 524s     | 1.57x  |
-| Tests passed        | 39/39      | 39/39    | -       |
-| Groups              | 1          | 5        | -       |
+| Wall time           | Xs         | Ys       | N.Nx    |
+| Tests passed        | N/N        | N/N      | -       |
+| Groups              | 1          | G        | -       |
 ```
-
-### 6. Optimize (Only When Asked)
-
-Only suggest code-level optimizations when the user explicitly asks:
-
-- Add `t.Parallel()` to tests that don't share mutable state
-- Split long multi-step tests into focused tests
-- Use `-short` flag to skip long-running tests during development
 
 ## Key Constraints
 
 - Never sacrifice correctness for speed. 100% pass rate is non-negotiable.
 - Always pre-compile the test binary once, then run the binary per group.
-- Always set `TF_ACC=1` for acceptance tests.
-- Default to non-verbose output unless diagnosing failures.
-- Keep parallel group count between 4-5 to avoid overwhelming the target
-  infrastructure. More groups does not mean faster — connection timeouts
-  from too many concurrent clients will cause all groups to fail.
-- Too few groups (3 or fewer) can be slower than sequential if the
-  critical-path group contains most tests. The optimal range is 4-5 groups.
-- Separate job-launching tests (that exercise AAP task workers) from
-  CRUD-only tests. Job tests are the primary source of contention.
+  Never use `go test` to run the groups — always use the compiled binary
+  with `-test.*` flags.
 - If a parallel strategy causes flaky failures, fall back to sequential for
   that group and report which tests conflicted.
